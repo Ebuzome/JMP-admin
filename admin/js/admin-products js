@@ -1,64 +1,54 @@
 // ==================== PRODUCT MANAGEMENT ====================
 
 async function loadProductColorsBatch() {
+    const supabase = AdminCore.getSupabase();
     try {
-        const { data: colors } = await supabase
-            .from('product_colors')
-            .select('*')
-            .order('product_id, color_name');
-        
+        const { data: colors } = await supabase.from('product_colors').select('*').order('product_id, color_name');
         if (colors) {
-            productColors = {};
+            const pc = {};
             colors.forEach(color => {
-                if (!productColors[color.product_id]) productColors[color.product_id] = [];
-                productColors[color.product_id].push(color);
+                if (!pc[color.product_id]) pc[color.product_id] = [];
+                pc[color.product_id].push(color);
             });
+            AdminCore.setProductColors(pc);
         }
-        console.log(`✅ Loaded colors for ${Object.keys(productColors).length} products`);
-    } catch (error) {
-        console.error('Failed to load colors:', error);
-    }
+    } catch (error) { console.error('Failed to load colors:', error); }
 }
 
 async function loadProductSizesBatch() {
+    const supabase = AdminCore.getSupabase();
     try {
-        const { data: sizes } = await supabase
-            .from('product_sizes')
-            .select('*')
-            .order('product_id, color_id, size_value');
-        
+        const { data: sizes } = await supabase.from('product_sizes').select('*').order('product_id, color_id, size_value');
         if (sizes) {
-            productSizes = {};
+            const ps = {};
             sizes.forEach(size => {
-                if (!productSizes[size.product_id]) productSizes[size.product_id] = {};
-                if (!productSizes[size.product_id][size.color_id]) productSizes[size.product_id][size.color_id] = [];
-                productSizes[size.product_id][size.color_id].push(size);
+                if (!ps[size.product_id]) ps[size.product_id] = {};
+                if (!ps[size.product_id][size.color_id]) ps[size.product_id][size.color_id] = [];
+                ps[size.product_id][size.color_id].push(size);
             });
+            AdminCore.setProductSizes(ps);
         }
-        console.log(`✅ Loaded sizes for ${Object.keys(productSizes).length} products`);
-    } catch (error) {
-        console.error('Failed to load sizes:', error);
-    }
+    } catch (error) { console.error('Failed to load sizes:', error); }
 }
 
 function calculateProductTotalStock() {
+    const allProducts = AdminCore.allProducts();
+    const productSizes = AdminCore.productSizes();
     allProducts.forEach(product => {
         let totalStock = 0;
         const sizes = productSizes[product.id];
         if (sizes) {
             Object.values(sizes).forEach(colorSizes => {
-                if (Array.isArray(colorSizes)) {
-                    colorSizes.forEach(size => {
-                        totalStock += size.stock_quantity || 0;
-                    });
-                }
+                if (Array.isArray(colorSizes)) colorSizes.forEach(size => { totalStock += size.stock_quantity || 0; });
             });
         }
         product.total_stock = totalStock;
     });
+    AdminCore.setAllProducts(allProducts);
 }
 
 function updateProductCounts() {
+    const allProducts = AdminCore.allProducts();
     const total = allProducts.length;
     const lowStock = allProducts.filter(p => {
         if (p.total_stock !== undefined) return p.total_stock < 10 && p.total_stock > 0;
@@ -69,89 +59,50 @@ function updateProductCounts() {
         return (p.stock || 0) === 0;
     }).length;
     
-    document.getElementById('productsCount').textContent = total;
-    document.getElementById('productsCountDesktop').textContent = total;
-    document.getElementById('lowStockCount').textContent = lowStock;
-    document.getElementById('lowStockCountDesktop').textContent = lowStock;
-    document.getElementById('lowStockCountStat').textContent = lowStock;
-    document.getElementById('outOfStockCount').textContent = outOfStock;
-    document.getElementById('totalProductsCount').textContent = total;
+    const invTotalStock = allProducts.reduce((sum, p) => sum + (p.total_stock !== undefined ? p.total_stock : (p.stock || 0)), 0);
+    const invValue = allProducts.reduce((sum, p) => sum + ((p.price || 0) * (p.total_stock !== undefined ? p.total_stock : (p.stock || 0))), 0);
     
-    // Inventory stats
-    const totalStock = allProducts.reduce((sum, p) => sum + (p.total_stock !== undefined ? p.total_stock : (p.stock || 0)), 0);
-    const inventoryValue = allProducts.reduce((sum, p) => sum + ((p.price || 0) * (p.total_stock !== undefined ? p.total_stock : (p.stock || 0))), 0);
-    document.getElementById('inventoryTotalStock').textContent = totalStock.toLocaleString();
-    document.getElementById('inventoryLowStock').textContent = lowStock;
-    document.getElementById('inventoryOutOfStock').textContent = outOfStock;
-    document.getElementById('inventoryValue').textContent = '₦' + Math.round(inventoryValue).toLocaleString();
+    document.getElementById('productsCount') && (document.getElementById('productsCount').textContent = total);
+    document.getElementById('productsCountDesktop') && (document.getElementById('productsCountDesktop').textContent = total);
+    document.getElementById('lowStockCount') && (document.getElementById('lowStockCount').textContent = lowStock);
+    document.getElementById('lowStockCountDesktop') && (document.getElementById('lowStockCountDesktop').textContent = lowStock);
+    document.getElementById('lowStockCountStat') && (document.getElementById('lowStockCountStat').textContent = lowStock);
+    document.getElementById('outOfStockCount') && (document.getElementById('outOfStockCount').textContent = outOfStock);
+    document.getElementById('totalProductsCount') && (document.getElementById('totalProductsCount').textContent = total);
+    document.getElementById('inventoryTotalStock') && (document.getElementById('inventoryTotalStock').textContent = invTotalStock.toLocaleString());
+    document.getElementById('inventoryLowStock') && (document.getElementById('inventoryLowStock').textContent = lowStock);
+    document.getElementById('inventoryOutOfStock') && (document.getElementById('inventoryOutOfStock').textContent = outOfStock);
+    document.getElementById('inventoryValue') && (document.getElementById('inventoryValue').textContent = '₦' + Math.round(invValue).toLocaleString());
 }
 
 function renderProductCard(product) {
     const stock = product.total_stock !== undefined ? product.total_stock : (product.stock || 0);
     const stockClass = stock > 10 ? 'stock-high' : stock > 0 ? 'stock-medium' : 'stock-low';
     const stockText = stock > 10 ? `${stock} in stock` : stock > 0 ? `${stock} left` : 'Out of stock';
-    const isFootwear = product.category?.slug?.includes('footwear') || product.product_modals?.[0]?.modal_type === 'footwear';
-    const colors = productColors[product.id] || [];
-    const sizes = productSizes[product.id] || {};
     const isActive = product.is_active !== false;
-    const imageUrl = getProductImageUrl(product);
+    const imageUrl = AdminCore.getProductImageUrl(product);
+    const colors = AdminCore.productColors()[product.id] || [];
+    const sizes = AdminCore.productSizes()[product.id] || {};
     
     return `
         <div class="product-card" data-product-id="${product.id}">
             <div class="product-image-container">
-                <img src="${imageUrl}" alt="${escapeHtml(product.name)}" class="product-image"
+                <img src="${imageUrl}" alt="${AdminCore.escapeHtml(product.name)}" class="product-image"
                      onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
                 ${!isActive ? `<div class="product-badge" style="background: var(--danger-500);"><i class="fas fa-ban"></i> Inactive</div>` : ''}
                 ${stock === 0 ? `<div class="product-badge" style="background: var(--danger-600);"><i class="fas fa-times"></i> Out of Stock</div>` : ''}
             </div>
             <div class="product-content">
                 <div class="product-header">
-                    <h3 class="product-name">${escapeHtml(product.name)}</h3>
+                    <h3 class="product-name">${AdminCore.escapeHtml(product.name)}</h3>
                     <span class="product-category">${product.category?.name || 'Uncategorized'}</span>
                 </div>
                 <div class="product-price">₦${(product.price || 0).toLocaleString()}</div>
-                <div class="product-meta">
-                    <div class="product-stock ${stockClass}">${stockText}</div>
-                    <div class="text-xs ${isActive ? 'text-green-600' : 'text-red-600'}">
-                        <i class="fas fa-circle" style="font-size: 0.5rem;"></i> ${isActive ? 'Active' : 'Inactive'}
-                    </div>
-                </div>
-                ${colors.length > 0 ? `
-                    <div class="product-variants">
-                        ${colors.slice(0, 3).map(color => {
-                            const colorSizes = sizes[color.id] || [];
-                            const sizeCount = colorSizes.length;
-                            const colorCodes = color.color_code ? color.color_code.split('+') : ['#ccc'];
-                            return `
-                                <span class="variant-tag">
-                                    ${colorCodes.map(code => `<span class="color-dot" style="background: ${code.trim()}"></span>`).join('')}
-                                    ${escapeHtml(color.color_name)}${sizeCount > 0 ? `(${sizeCount} sizes)` : ''}
-                                </span>
-                            `;
-                        }).join('')}
-                        ${colors.length > 3 ? `<span class="variant-tag">+${colors.length - 3} more</span>` : ''}
-                    </div>
-                ` : ''}
+                <div class="product-meta"><div class="product-stock ${stockClass}">${stockText}</div><div class="text-xs ${isActive ? 'text-green-600' : 'text-red-600'}"><i class="fas fa-circle" style="font-size: 0.5rem;"></i> ${isActive ? 'Active' : 'Inactive'}</div></div>
+                ${colors.length > 0 ? `<div class="product-variants">${colors.slice(0, 3).map(color => { const colorSizes = sizes[color.id] || []; const colorCodes = color.color_code ? color.color_code.split('+') : ['#ccc']; return `<span class="variant-tag">${colorCodes.map(code => `<span class="color-dot" style="background: ${code.trim()}"></span>`).join('')} ${AdminCore.escapeHtml(color.color_name)}${colorSizes.length > 0 ? `(${colorSizes.length} sizes)` : ''}</span>`; }).join('')}${colors.length > 3 ? `<span class="variant-tag">+${colors.length - 3} more</span>` : ''}</div>` : ''}
                 <div class="product-actions">
-                    <button class="btn btn-primary btn-sm flex-1" onclick="window.AdminProducts.editProduct(${product.id})">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <div class="status-dropdown">
-                        <button class="btn btn-sm ${isActive ? 'btn-success' : 'btn-secondary'}" onclick="window.AdminProducts.toggleStatusDropdown(${product.id}, this)">
-                            <i class="fas fa-power-off"></i>
-                        </button>
-                        <div class="status-dropdown-content" id="statusDropdown${product.id}">
-                            <div class="status-option ${isActive ? 'active' : ''}" onclick="window.AdminProducts.activateProduct(${product.id})">
-                                <i class="fas fa-check-circle"></i> Activate
-                            </div>
-                            <div class="status-option ${!isActive ? 'active' : ''}" onclick="window.AdminProducts.deactivateProduct(${product.id})">
-                                <i class="fas fa-ban"></i> Deactivate
-                            </div>
-                        </div>
-                    </div>
-                    <button class="btn btn-sm btn-secondary" onclick="window.AdminProducts.duplicateProduct(${product.id})">
-                        <i class="fas fa-copy"></i>
-                    </button>
+                    <button class="btn btn-primary btn-sm flex-1" onclick="window.AdminProducts.editProduct(${product.id})"><i class="fas fa-edit"></i> Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="window.AdminProducts.deleteProduct(${product.id})"><i class="fas fa-trash"></i> Delete</button>
                 </div>
             </div>
         </div>
@@ -161,26 +112,14 @@ function renderProductCard(product) {
 function renderRecentProducts() {
     const container = document.getElementById('recentProducts');
     if (!container) return;
-    
+    const allProducts = AdminCore.allProducts();
     const recentProducts = allProducts.slice(0, 8);
-    
     if (recentProducts.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-icon"><i class="fas fa-box-open"></i></div>
-                <h3 class="empty-title">No Products Yet</h3>
-                <button class="btn btn-primary mt-4" onclick="window.AdminProducts.openAddProductModal()">
-                    <i class="fas fa-plus"></i> Add First Product
-                </button>
-            </div>
-        `;
+        container.innerHTML = `<div class="empty-state"><div class="empty-icon"><i class="fas fa-box-open"></i></div><h3 class="empty-title">No Products Yet</h3><button class="btn btn-primary mt-4" onclick="window.AdminProducts.openAddProductModal()"><i class="fas fa-plus"></i> Add First Product</button></div>`;
         return;
     }
-    
     let html = '';
-    recentProducts.forEach(product => {
-        html += renderProductCard(product);
-    });
+    recentProducts.forEach(product => { html += renderProductCard(product); });
     container.innerHTML = html;
 }
 
@@ -188,135 +127,85 @@ function renderProductsPage() {
     const container = document.getElementById('allProducts');
     if (!container) return;
     
+    const currentPage = AdminCore.getCurrentPage();
+    const productsPerPage = AdminCore.getProductsPerPage();
+    const filteredProducts = AdminCore.filteredProducts();
     const startIndex = (currentPage - 1) * productsPerPage;
-    const endIndex = startIndex + productsPerPage;
-    const pageProducts = filteredProducts.slice(startIndex, endIndex);
+    const pageProducts = filteredProducts.slice(startIndex, startIndex + productsPerPage);
     
     if (pageProducts.length === 0) {
-        let message = '';
-        switch (currentFilter) {
-            case 'low_stock': message = 'No products with low stock'; break;
-            case 'inactive': message = 'No inactive products'; break;
-            case 'footwear': message = 'No footwear products'; break;
-            default: message = 'No products found';
-        }
-        container.innerHTML = `
-            <div class="empty-state" style="grid-column: 1 / -1;">
-                <div class="empty-icon"><i class="fas fa-search"></i></div>
-                <h3 class="empty-title">${message}</h3>
-                <button class="btn btn-primary mt-4" onclick="window.AdminProducts.openAddProductModal()">
-                    <i class="fas fa-plus"></i> Add New Product
-                </button>
-            </div>
-        `;
-        document.getElementById('paginationContainer').style.display = 'none';
+        container.innerHTML = `<div class="empty-state"><div class="empty-icon"><i class="fas fa-search"></i></div><h3 class="empty-title">No products found</h3><button class="btn btn-primary mt-4" onclick="window.AdminProducts.openAddProductModal()"><i class="fas fa-plus"></i> Add New Product</button></div>`;
+        document.getElementById('paginationContainer') && (document.getElementById('paginationContainer').style.display = 'none');
         return;
     }
     
     let html = '';
-    pageProducts.forEach(product => {
-        html += renderProductCard(product);
-    });
+    pageProducts.forEach(product => { html += renderProductCard(product); });
     container.innerHTML = html;
     
     const totalProducts = filteredProducts.length;
-    const totalPages = Math.ceil(totalProducts / productsPerPage);
-    
-    document.getElementById('startRow').textContent = startIndex + 1;
-    document.getElementById('endRow').textContent = Math.min(endIndex, totalProducts);
-    document.getElementById('totalRows').textContent = totalProducts;
-    
-    document.getElementById('paginationContainer').style.display = totalProducts > productsPerPage ? 'flex' : 'none';
-    document.getElementById('prevBtn').disabled = currentPage === 1;
-    document.getElementById('nextBtn').disabled = currentPage === totalPages;
+    document.getElementById('startRow') && (document.getElementById('startRow').textContent = startIndex + 1);
+    document.getElementById('endRow') && (document.getElementById('endRow').textContent = Math.min(startIndex + productsPerPage, totalProducts));
+    document.getElementById('totalRows') && (document.getElementById('totalRows').textContent = totalProducts);
+    document.getElementById('paginationContainer') && (document.getElementById('paginationContainer').style.display = totalProducts > productsPerPage ? 'flex' : 'none');
+    document.getElementById('prevBtn') && (document.getElementById('prevBtn').disabled = currentPage === 1);
+    document.getElementById('nextBtn') && (document.getElementById('nextBtn').disabled = currentPage >= Math.ceil(totalProducts / productsPerPage));
 }
 
-function filterProducts(filterType) {
-    currentFilter = filterType;
-    currentPage = 1;
-    
-    switch (filterType) {
-        case 'footwear':
-            filteredProducts = allProducts.filter(p => 
-                p.category?.slug?.includes('footwear') || 
-                p.product_modals?.[0]?.modal_type === 'footwear'
-            );
-            break;
-        case 'low_stock':
-            filteredProducts = allProducts.filter(p => {
-                if (p.total_stock !== undefined) return p.total_stock < 10 && p.total_stock > 0;
-                return (p.stock || 0) < 10 && (p.stock || 0) > 0;
-            });
-            break;
-        case 'inactive':
-            filteredProducts = allProducts.filter(p => !p.is_active);
-            break;
-        default:
-            filteredProducts = [...allProducts];
-    }
-    
-    // Apply category filter
+function filterProducts() {
+    const allProducts = AdminCore.allProducts();
     const categoryFilter = document.getElementById('categoryFilter');
-    if (categoryFilter && categoryFilter.value) {
-        filteredProducts = filteredProducts.filter(p => p.category_id == categoryFilter.value);
-    }
-    
-    // Apply search filter
     const searchInput = document.getElementById('productSearch');
+    let filtered = [...allProducts];
+    if (categoryFilter && categoryFilter.value) filtered = filtered.filter(p => p.category_id == categoryFilter.value);
     if (searchInput && searchInput.value) {
         const searchTerm = searchInput.value.toLowerCase();
-        filteredProducts = filteredProducts.filter(p => 
-            p.name.toLowerCase().includes(searchTerm) ||
-            (p.description || '').toLowerCase().includes(searchTerm)
-        );
+        filtered = filtered.filter(p => p.name.toLowerCase().includes(searchTerm) || (p.description || '').toLowerCase().includes(searchTerm));
     }
-    
+    AdminCore.setFilteredProducts(filtered);
+    AdminCore.setCurrentPage(1);
     renderProductsPage();
 }
 
 function nextPage() {
-    const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
-    if (currentPage < totalPages) {
+    const filteredProducts = AdminCore.filteredProducts();
+    const productsPerPage = AdminCore.getProductsPerPage();
+    let currentPage = AdminCore.getCurrentPage();
+    if (currentPage < Math.ceil(filteredProducts.length / productsPerPage)) {
         currentPage++;
+        AdminCore.setCurrentPage(currentPage);
         renderProductsPage();
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 }
 
 function prevPage() {
+    let currentPage = AdminCore.getCurrentPage();
     if (currentPage > 1) {
         currentPage--;
+        AdminCore.setCurrentPage(currentPage);
         renderProductsPage();
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 }
 
 function populateCategoryFilters() {
+    const categories = AdminCore.categories();
     const categorySelect = document.getElementById('categoryFilter');
     const productCategory = document.getElementById('productCategory');
-    
     if (categorySelect) {
         let options = '<option value="">All Categories</option>';
-        categories.forEach(category => {
-            const productCount = allProducts.filter(p => p.category_id === category.id).length;
-            options += `<option value="${category.id}">${escapeHtml(category.name)} (${productCount})</option>`;
-        });
+        categories.forEach(category => { options += `<option value="${category.id}">${AdminCore.escapeHtml(category.name)}</option>`; });
         categorySelect.innerHTML = options;
-        categorySelect.addEventListener('change', () => filterProducts(currentFilter));
+        categorySelect.addEventListener('change', () => filterProducts());
     }
-    
     if (productCategory) {
         let options = '<option value="">Select Category</option>';
-        categories.forEach(category => {
-            options += `<option value="${category.id}" data-slug="${category.slug}">${escapeHtml(category.name)}</option>`;
-        });
+        categories.forEach(category => { options += `<option value="${category.id}" data-slug="${category.slug}">${AdminCore.escapeHtml(category.name)}</option>`; });
         productCategory.innerHTML = options;
     }
-    
     const searchInput = document.getElementById('productSearch');
-    if (searchInput) {
-        searchInput.addEventListener('input', () => filterProducts(currentFilter));
-    }
+    if (searchInput) searchInput.addEventListener('input', () => filterProducts());
 }
 
 function openAddProductModal() {
@@ -324,50 +213,37 @@ function openAddProductModal() {
     document.getElementById('productId').value = '';
     document.getElementById('isFootwear').value = 'false';
     document.getElementById('productForm').reset();
-    document.getElementById('colorManagementSection').style.display = 'none';
-    document.getElementById('sizeManagementSection').style.display = 'none';
-    document.getElementById('colorsContainer').innerHTML = '';
-    document.getElementById('sizesContainer').innerHTML = `
-        <div class="text-center py-8 text-gray-500">
-            <i class="fas fa-shoe-prints mb-2" style="font-size: 2rem;"></i>
-            <p>Select a color to manage sizes</p>
-        </div>
-    `;
-    document.getElementById('imagePreviewContainer').style.display = 'none';
+    document.getElementById('colorManagementSection') && (document.getElementById('colorManagementSection').style.display = 'none');
+    document.getElementById('sizeManagementSection') && (document.getElementById('sizeManagementSection').style.display = 'none');
+    document.getElementById('colorsContainer') && (document.getElementById('colorsContainer').innerHTML = '');
+    document.getElementById('sizesContainer') && (document.getElementById('sizesContainer').innerHTML = `<div class="text-center py-8 text-gray-500"><i class="fas fa-shoe-prints mb-2" style="font-size: 2rem;"></i><p>Select a color to manage sizes</p></div>`);
     openModal();
 }
 
 function onCategoryChange() {
+    const categories = AdminCore.categories();
     const categorySelect = document.getElementById('productCategory');
     const categoryId = categorySelect.value;
     const category = categories.find(c => c.id == categoryId);
-    
-    if (category && category.slug.includes('footwear')) {
+    if (category && category.slug && category.slug.includes('footwear')) {
         document.getElementById('isFootwear').value = 'true';
-        document.getElementById('colorManagementSection').style.display = 'block';
-        document.getElementById('sizeManagementSection').style.display = 'block';
+        document.getElementById('colorManagementSection') && (document.getElementById('colorManagementSection').style.display = 'block');
+        document.getElementById('sizeManagementSection') && (document.getElementById('sizeManagementSection').style.display = 'block');
     } else {
         document.getElementById('isFootwear').value = 'false';
-        document.getElementById('colorManagementSection').style.display = 'none';
-        document.getElementById('sizeManagementSection').style.display = 'none';
+        document.getElementById('colorManagementSection') && (document.getElementById('colorManagementSection').style.display = 'none');
+        document.getElementById('sizeManagementSection') && (document.getElementById('sizeManagementSection').style.display = 'none');
     }
-    
-    if (typeof window.updateImagePreview === 'function') {
-        window.updateImagePreview();
-    }
+    updateImagePreview();
 }
 
 async function editProduct(productId) {
+    const allProducts = AdminCore.allProducts();
     const product = allProducts.find(p => p.id === productId);
-    if (!product) {
-        showToast('Product not found', 'error');
-        return;
-    }
+    if (!product) { AdminCore.showToast('Product not found', 'error'); return; }
     
-    const isFootwear = product.category?.slug?.includes('footwear') || 
-                      product.product_modals?.[0]?.modal_type === 'footwear';
-    
-    currentProductId = productId;
+    const isFootwear = product.category?.slug?.includes('footwear') || product.product_modals?.[0]?.modal_type === 'footwear';
+    AdminCore.setCurrentProductId(productId);
     
     document.getElementById('modalTitle').textContent = `Edit: ${product.name}`;
     document.getElementById('productId').value = product.id;
@@ -378,64 +254,37 @@ async function editProduct(productId) {
     document.getElementById('productDescription').value = product.description || '';
     
     const categorySelect = document.getElementById('productCategory');
-    if (categorySelect) {
-        categorySelect.value = product.category_id || '';
-        onCategoryChange();
-    }
+    if (categorySelect) { categorySelect.value = product.category_id || ''; onCategoryChange(); }
     
     const imageUrl = product.image_url || '';
-    const imageFilename = parseImageFilenameFromUrl(imageUrl);
+    const imageFilename = AdminCore.parseImageFilenameFromUrl(imageUrl);
     document.getElementById('productImageName').value = imageFilename;
-    
-    if (typeof window.updateImagePreview === 'function') {
-        window.updateImagePreview();
-    }
+    updateImagePreview();
     
     if (isFootwear) {
-        if (typeof window.loadColorsForProduct === 'function') {
-            await window.loadColorsForProduct(productId);
-        }
-        if (typeof window.loadSizesForProduct === 'function') {
-            await window.loadSizesForProduct(productId);
-        }
+        await loadColorsForProduct(productId);
+        await loadSizesForProduct(productId);
     }
-    
     openModal();
 }
 
 async function deleteProduct(productId) {
     if (!confirm('Are you sure you want to delete this product?')) return;
-    
+    const supabase = AdminCore.getSupabase();
     try {
-        const { error } = await supabase.from('products').delete().eq('id', productId);
-        if (error) throw error;
-        
+        await supabase.from('products').delete().eq('id', productId);
         await window.loadInitialData();
-        showToast('Product deleted successfully', 'success');
-    } catch (error) {
-        showToast('Failed to delete product: ' + error.message, 'error');
-    }
+        AdminCore.showToast('Product deleted successfully', 'success');
+    } catch (error) { AdminCore.showToast('Failed to delete product', 'error'); }
 }
 
 async function saveProduct(event) {
     event.preventDefault();
-    
+    const supabase = AdminCore.getSupabase();
     const productId = document.getElementById('productId').value;
-    const isFootwear = document.getElementById('isFootwear').value === 'true';
     const isNew = !productId;
-    
     const categoryId = document.getElementById('productCategory').value;
-    const category = categories.find(c => c.id == categoryId);
-    if (!category) {
-        showToast('Please select a category', 'error');
-        return;
-    }
-    
     const imageName = document.getElementById('productImageName').value.trim();
-    if (!imageName) {
-        showToast('Please enter an image filename', 'error');
-        return;
-    }
     
     const productData = {
         name: document.getElementById('productName').value.trim(),
@@ -447,37 +296,17 @@ async function saveProduct(event) {
         stock: 0,
         updated_at: new Date().toISOString()
     };
+    if (isNew) productData.created_at = new Date().toISOString();
     
-    if (isNew) {
-        productData.created_at = new Date().toISOString();
-    }
-    
-    if (!productData.name || productData.price <= 0) {
-        showToast('Please fill all required fields correctly', 'warning');
-        return;
-    }
+    if (!productData.name || productData.price <= 0) { AdminCore.showToast('Please fill all required fields', 'warning'); return; }
     
     try {
-        let result;
-        if (isNew) {
-            const { data, error } = await supabase.from('products').insert([productData]).select();
-            if (error) throw error;
-            result = data[0];
-            document.getElementById('productId').value = result.id;
-            currentProductId = result.id;
-        } else {
-            const { data, error } = await supabase.from('products').update(productData).eq('id', productId).select();
-            if (error) throw error;
-            result = data[0];
-        }
-        
+        if (isNew) await supabase.from('products').insert([productData]);
+        else await supabase.from('products').update(productData).eq('id', productId);
         await window.loadInitialData();
-        showToast('✅ Product saved successfully!', 'success');
+        AdminCore.showToast('✅ Product saved successfully!', 'success');
         setTimeout(() => closeModal(), 1500);
-    } catch (error) {
-        console.error('Save failed:', error);
-        showToast('❌ Save failed: ' + error.message, 'error');
-    }
+    } catch (error) { AdminCore.showToast('❌ Save failed: ' + error.message, 'error'); }
 }
 
 function openModal() {
@@ -488,175 +317,129 @@ function openModal() {
 function closeModal() {
     document.getElementById('productModal').style.display = 'none';
     document.body.style.overflow = 'auto';
-    currentProductId = null;
-}
-
-function saveAsDraft() {
-    showToast('Draft saved (feature in development)', 'info');
-}
-
-async function testWrite() {
-    showToast('Testing write permissions...', 'info');
-    
-    const testData = {
-        name: 'Write Test ' + Date.now(),
-        price: 999,
-        stock: 9,
-        category_id: 1,
-        image_url: 'test-image.jpg',
-        description: 'Database write test',
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-    };
-    
-    try {
-        const { data, error } = await supabase.from('products').insert([testData]).select();
-        if (error) throw error;
-        showToast('✅ Write test successful!', 'success');
-        await window.loadInitialData();
-    } catch (error) {
-        console.error('Write test failed:', error);
-        showToast('❌ Write test failed: ' + error.message, 'error');
-    }
-}
-
-let activeStatusDropdown = null;
-
-function toggleStatusDropdown(productId, button) {
-    if (activeStatusDropdown && activeStatusDropdown !== productId) {
-        const prevDropdown = document.getElementById('statusDropdown' + activeStatusDropdown);
-        if (prevDropdown) prevDropdown.classList.remove('show');
-    }
-    
-    const dropdown = document.getElementById('statusDropdown' + productId);
-    if (dropdown) {
-        dropdown.classList.toggle('show');
-        activeStatusDropdown = dropdown.classList.contains('show') ? productId : null;
-    }
-    
-    document.addEventListener('click', function closeDropdown(e) {
-        if (!button.contains(e.target) && !dropdown.contains(e.target)) {
-            dropdown.classList.remove('show');
-            activeStatusDropdown = null;
-            document.removeEventListener('click', closeDropdown);
-        }
-    });
-}
-
-async function activateProduct(productId) {
-    try {
-        const { error } = await supabase
-            .from('products')
-            .update({ is_active: true, updated_at: new Date().toISOString() })
-            .eq('id', productId);
-        if (error) throw error;
-        
-        const product = allProducts.find(p => p.id === productId);
-        if (product) product.is_active = true;
-        
-        renderRecentProducts();
-        renderProductsPage();
-        showToast('Product activated successfully', 'success');
-        
-        const dropdown = document.getElementById('statusDropdown' + productId);
-        if (dropdown) dropdown.classList.remove('show');
-        activeStatusDropdown = null;
-    } catch (error) {
-        showToast('Failed to activate product: ' + error.message, 'error');
-    }
-}
-
-async function deactivateProduct(productId) {
-    if (!confirm('Are you sure you want to deactivate this product?')) return;
-    
-    try {
-        const { error } = await supabase
-            .from('products')
-            .update({ is_active: false, updated_at: new Date().toISOString() })
-            .eq('id', productId);
-        if (error) throw error;
-        
-        const product = allProducts.find(p => p.id === productId);
-        if (product) product.is_active = false;
-        
-        renderRecentProducts();
-        renderProductsPage();
-        showToast('Product deactivated successfully', 'success');
-        
-        const dropdown = document.getElementById('statusDropdown' + productId);
-        if (dropdown) dropdown.classList.remove('show');
-        activeStatusDropdown = null;
-    } catch (error) {
-        showToast('Failed to deactivate product: ' + error.message, 'error');
-    }
-}
-
-function duplicateProduct(productId) {
-    showToast('Product duplication coming soon', 'info');
+    AdminCore.setCurrentProductId(null);
 }
 
 function updateImagePreview() {
+    const categories = AdminCore.categories();
     const categorySelect = document.getElementById('productCategory');
     const imageName = document.getElementById('productImageName').value;
     const previewContainer = document.getElementById('imagePreviewContainer');
-    
-    if (!categorySelect?.value || !imageName) {
-        if (previewContainer) previewContainer.style.display = 'none';
-        return;
-    }
-    
+    if (!categorySelect?.value || !imageName) { if (previewContainer) previewContainer.style.display = 'none'; return; }
     const category = categories.find(c => c.id == categorySelect.value);
     if (!category) return;
-    
-    const imageUrl = buildCorrectImageUrl(imageName, category.slug);
-    
+    const imageUrl = AdminCore.buildCorrectImageUrl(imageName, category.slug);
     if (previewContainer) {
         const previewImg = document.getElementById('imagePreview');
-        const placeholder = document.getElementById('imagePreviewPlaceholder');
         const pathInfo = document.getElementById('imagePathInfo');
         const statusInfo = document.getElementById('imageStatus');
-        
-        if (previewImg) {
-            previewImg.src = imageUrl;
-            previewImg.style.display = 'block';
-        }
-        if (placeholder) placeholder.style.display = 'none';
+        if (previewImg) previewImg.src = imageUrl;
         if (pathInfo) pathInfo.textContent = `Preview: ${imageName}`;
         if (statusInfo) statusInfo.textContent = `Will be saved as: ${imageName}`;
-        
         previewContainer.style.display = 'block';
     }
 }
 
-// ==================== EXPORTS ====================
+async function loadColorsForProduct(productId) {
+    const productColors = AdminCore.productColors();
+    const colors = productColors[productId] || [];
+    const container = document.getElementById('colorsContainer');
+    if (!container) return;
+    let html = '';
+    colors.forEach(color => {
+        const colorCodes = color.color_code ? color.color_code.split('+') : ['#ccc'];
+        const isCombination = colorCodes.length > 1;
+        html += `<div class="color-item" data-color-id="${color.id}"><div class="color-preview">${isCombination ? `<div class="color-combination-preview">${colorCodes.map(code => `<div class="color-slice" style="background: ${code.trim()}"></div>`).join('')}</div>` : `<div style="background: ${colorCodes[0]}; width: 100%; height: 100%; border-radius: var(--radius-sm);"></div>`}</div><div class="text-sm font-semibold mb-1">${AdminCore.escapeHtml(color.color_name)}</div><div class="text-xs text-gray-600 mb-2">${color.color_code}</div><div class="color-actions"><button class="btn btn-sm btn-secondary flex-1" onclick="window.AdminColors.editColor(${color.id})"><i class="fas fa-edit"></i> Edit</button><button class="btn btn-sm btn-secondary" onclick="window.AdminColors.deleteColor(${color.id})"><i class="fas fa-trash"></i></button></div></div>`;
+    });
+    html += `<div class="color-item" style="border-style: dashed; cursor: pointer; text-align: center;" onclick="window.AdminColors.openAddColorModal()"><div class="color-preview" style="background: var(--gray-200); display: flex; align-items: center; justify-content: center;"><i class="fas fa-plus text-gray-400" style="font-size: 1.5rem;"></i></div><div class="text-sm text-gray-600 mt-2">Add Color</div></div>`;
+    container.innerHTML = html;
+    document.getElementById('colorCount') && (document.getElementById('colorCount').textContent = `(${colors.length} colors)`);
+    
+    const colorSelector = document.getElementById('colorSelector');
+    if (colorSelector) {
+        let options = '<option value="">Select a color</option>';
+        colors.forEach(color => { options += `<option value="${color.id}">${AdminCore.escapeHtml(color.color_name)}</option>`; });
+        colorSelector.innerHTML = options;
+    }
+    const sizeColorSelector = document.getElementById('sizeColorSelector');
+    if (sizeColorSelector) {
+        let options = '<option value="">Select a color</option>';
+        colors.forEach(color => { options += `<option value="${color.id}">${AdminCore.escapeHtml(color.color_name)}</option>`; });
+        sizeColorSelector.innerHTML = options;
+    }
+}
+
+async function loadSizesForProduct(productId) {
+    const productSizes = AdminCore.productSizes();
+    window.currentEditingSizes = productSizes[productId] || {};
+}
+
+function loadSizesForColor() {
+    const colorId = document.getElementById('colorSelector').value;
+    const sizes = window.currentEditingSizes ? window.currentEditingSizes[colorId] || [] : [];
+    const container = document.getElementById('sizesContainer');
+    if (!container) return;
+    if (!colorId) {
+        container.innerHTML = `<div class="text-center py-8 text-gray-500"><i class="fas fa-shoe-prints mb-2" style="font-size: 2rem;"></i><p>Select a color to manage sizes</p></div>`;
+        document.getElementById('sizeCount') && (document.getElementById('sizeCount').textContent = '(Select a color)');
+        return;
+    }
+    const colorSelector = document.getElementById('colorSelector');
+    const colorName = colorSelector.options[colorSelector.selectedIndex].text;
+    let html = '';
+    const sizeMap = {};
+    sizes.forEach(size => { if (size && size.size_value) sizeMap[size.size_value] = size; });
+    const commonSizes = AdminCore.commonSizes;
+    commonSizes.forEach(size => {
+        const sizeData = sizeMap[size];
+        const stock = sizeData ? (sizeData.stock_quantity || 0) : 0;
+        const isAvailable = sizeData ? (sizeData.is_available || false) : false;
+        html += `<div class="size-item"><div class="size-label">Size</div><div class="size-value">${size}</div><input type="number" class="size-stock-input" value="${stock}" data-color-id="${colorId}" data-size="${size}" placeholder="0" min="0" onchange="window.AdminSizes.updateSizeStock(this, ${colorId}, '${size}')"><div class="text-xs ${stock > 0 ? 'text-green-600' : 'text-gray-600'} mt-1">Stock: ${stock}</div><div class="flex items-center justify-center mt-1"><input type="checkbox" ${isAvailable ? 'checked' : ''} onchange="window.AdminSizes.toggleSizeAvailability(this, ${colorId}, '${size}')" class="mr-1"><span class="text-xs">Available</span></div></div>`;
+    });
+    container.innerHTML = html;
+    document.getElementById('sizeCount') && (document.getElementById('sizeCount').textContent = `(${commonSizes.length} sizes for ${AdminCore.escapeHtml(colorName)})`);
+}
+
+async function updateSizeStock(input, colorId, sizeValue) {
+    const supabase = AdminCore.getSupabase();
+    const productId = AdminCore.currentProductId();
+    const stockQuantity = parseInt(input.value) || 0;
+    try {
+        const sizes = window.currentEditingSizes ? window.currentEditingSizes[colorId] || [] : [];
+        const existingSize = sizes.find(s => s && s.size_value === sizeValue);
+        if (existingSize) {
+            await supabase.from('product_sizes').update({ stock_quantity: stockQuantity, is_available: stockQuantity > 0, updated_at: new Date().toISOString() }).eq('id', existingSize.id);
+            existingSize.stock_quantity = stockQuantity;
+            existingSize.is_available = stockQuantity > 0;
+        } else {
+            const sizeData = { product_id: parseInt(productId), color_id: parseInt(colorId), size_value: sizeValue, stock_quantity: stockQuantity, is_available: stockQuantity > 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+            const { data } = await supabase.from('product_sizes').insert([sizeData]).select();
+            if (data && data[0]) {
+                if (!window.currentEditingSizes[colorId]) window.currentEditingSizes[colorId] = [];
+                window.currentEditingSizes[colorId].push(data[0]);
+            }
+        }
+        AdminCore.showToast('Stock updated', 'success');
+    } catch (error) { AdminCore.showToast('Failed to update stock', 'error'); }
+}
+
+async function toggleSizeAvailability(checkbox, colorId, sizeValue) {
+    const supabase = AdminCore.getSupabase();
+    const isAvailable = checkbox.checked;
+    try {
+        const sizes = window.currentEditingSizes ? window.currentEditingSizes[colorId] || [] : [];
+        const existingSize = sizes.find(s => s && s.size_value === sizeValue);
+        if (existingSize) {
+            await supabase.from('product_sizes').update({ is_available: isAvailable, updated_at: new Date().toISOString() }).eq('id', existingSize.id);
+            existingSize.is_available = isAvailable;
+            AdminCore.showToast('Availability updated', 'success');
+        }
+    } catch (error) { checkbox.checked = !isAvailable; AdminCore.showToast('Failed to update', 'error'); }
+}
+
 window.AdminProducts = {
-    loadProductColorsBatch,
-    loadProductSizesBatch,
-    calculateProductTotalStock,
-    updateProductCounts,
-    renderProductCard,
-    renderRecentProducts,
-    renderProductsPage,
-    filterProducts,
-    nextPage,
-    prevPage,
-    populateCategoryFilters,
-    openAddProductModal,
-    onCategoryChange,
-    editProduct,
-    deleteProduct,
-    saveProduct,
-    openModal,
-    closeModal,
-    saveAsDraft,
-    testWrite,
-    toggleStatusDropdown,
-    activateProduct,
-    deactivateProduct,
-    duplicateProduct,
-    updateImagePreview,
-    currentPage: () => currentPage,
-    productsPerPage: () => productsPerPage,
-    currentFilter: () => currentFilter
+    loadProductColorsBatch, loadProductSizesBatch, calculateProductTotalStock, updateProductCounts,
+    renderRecentProducts, renderProductsPage, filterProducts, nextPage, prevPage, populateCategoryFilters,
+    openAddProductModal, onCategoryChange, editProduct, deleteProduct, saveProduct, closeModal,
+    updateImagePreview, loadColorsForProduct, loadSizesForProduct, loadSizesForColor, updateSizeStock, toggleSizeAvailability
 };
