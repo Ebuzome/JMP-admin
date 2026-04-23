@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>JMPOTTERS Admin | Enterprise Management</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Admin CSS -->
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <div class="toast-container" id="toastContainer"></div>
+    
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+        <button class="mobile-menu-btn" id="mobileMenuBtn"><i class="fas fa-bars"></i></button>
+        <div class="mobile-brand"><div class="brand-logo"><i class="fas fa-store"></i></div><span class="brand-text">JMPOTTERS</span></div>
+        <div class="mobile-actions">
+            <button class="mobile-menu-btn" onclick="window.AdminProducts.openAddProductModal()"><i class="fas fa-plus"></i></button>
+            <button class="mobile-menu-btn" onclick="window.AdminSettings.toggleDarkMode()"><i class="fas fa-moon"></i></button>
+            <button class="mobile-menu-btn" onclick="window.AdminProducts.testWrite()"><i class="fas fa-vial"></i></button>
+        </div>
+    </header>
+    
+    <!-- Mobile Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
+    <!-- Mobile Sidebar -->
+    <aside class="mobile-sidebar" id="mobileSidebar">
+        <div class="sidebar-header"><div class="sidebar-user"><div class="user-avatar">AD</div><div class="user-info"><h4>Admin User</h4><p>Administrator</p></div></div></div>
+        <nav class="sidebar-nav">
+            <div class="nav-section"><div class="section-label">Main</div>
+                <ul class="nav-items">
+                    <li class="nav-item"><a href="#" class="nav-link active" data-section="dashboard"><div class="nav-icon"><i class="fas fa-tachometer-alt"></i></div>Dashboard</a></li>
+                    <li class="nav-item"><a href="#" class="nav-link" data-section="analytics"><div class="nav-icon"><i class="fas fa-chart-line"></i></div>Analytics</a></li>
+                </ul>
+            </div>
+            <div class="nav-section"><div class="section-label">Commerce</div>
+                <ul class="nav-items">
+                    <li class="nav-item"><a href="#" class="nav-link" data-section="products"><div class="nav-icon"><i class="fas fa-box"></i></div>Products<div class="nav-badge" id="productsCount">0</div></a></li>
+                    <li class="nav-item"><a href="#" class="nav-link" data-section="categories"><div class="nav-icon"><i class="fas fa-tags"></i></div>Categories</a></li>
+                    <li class="nav-item"><a href="#" class="nav-link" data-section="inventory"><div class="nav-icon"><i class="fas fa-warehouse"></i></div>Inventory<div class="nav-badge urgent" id="lowStockCount">0</div></a></li>
+                    <li class="nav-item"><a href="#" class="nav-link" data-section="orders"><div class="nav-icon"><i class="fas fa-shopping-cart"></i></div>Orders<div class="nav-badge" id="ordersCount">0</div></a></li>
+                </ul>
+            </div>
+            <div class="nav-section"><div class="section-label">Marketing</div>
+                <ul class="nav-items">
+                    <li class="nav-item"><a href="#" class="nav-link" data-section="coupons"><div class="nav-icon"><i class="fas fa-ticket-alt"></i></div>Coupons</a></li>
+                    <li class="nav-item"><a href="#" class="nav-link" data-section="reviews"><div class="nav-icon"><i class="fas fa-star"></i></div>Reviews</a></li>
+                </ul>
+            </div>
+            <div class="nav-section"><div class="section-label">Settings</div>
+                <ul class="nav-items">
+                    <li class="nav-item"><a href="#" class="nav-link" data-section="users"><div class="nav-icon"><i class="fas fa-users"></i></div>Users</a></li>
+                    <li class="nav-item"><a href="#" class="nav-link" data-section="settings"><div class="nav-icon"><i class="fas fa-cog"></i></div>Settings</a></li>
+                </ul>
+            </div>
+        </nav>
+    </aside>
+    
+    <!-- Desktop Sidebar -->
+    <aside class="admin-sidebar">
+        <div class="sidebar-header"><div class="sidebar-user"><div class="user-avatar">AD</div><div class="user-info"><h4>Admin User</h4><p>Administrator</p></div></div></div>
+        <nav class="sidebar-nav">
+            <div class="nav-section"><div class="section-label">Main</div>
+                <ul class="nav-items">
+                    <li class="nav-item"><a href="#" class="nav-link active" data-section="dashboard"><div class="nav-icon"><i class="fas fa-tachometer-alt"></i></div>Dashboard</a></li>
+                    <li class="nav-item"><a href="#" class="nav-link" data-section="analytics"><div class="nav-icon"><i class="fas fa-chart-line"></i></div>Analytics</a></li>
+                </ul>
+            </div>
+            <div class="nav-section"><div class="section-label">Commerce</div>
+                <ul class="nav-items">
+                    <li class="nav-item"><a href="#" class="nav-link" data-section="products"><div class="nav-icon"><i class="fas fa-box"></i></div>Products<div class="nav-badge" id="productsCountDesktop">0</div></a></li>
+                    <li class="nav-item"><a href="#" class="nav-link" data-section="categories"><div class="nav-icon"><i class="fas fa-tags"></i></div>Categories</a></li>
+                    <li class="nav-item"><a href="#" class="nav-link" data-section="inventory"><div class="nav-icon"><i class="fas fa-warehouse"></i></div>Inventory<div class="nav-badge urgent" id="lowStockCountDesktop">0</div></a></li>
+                    <li class="nav-item"><a href="#" class="nav-link" data-section="orders"><div class="nav-icon"><i class="fas fa-shopping-cart"></i></div>Orders<div class="nav-badge" id="ordersCountDesktop">0</div></a></li>
+                </ul>
+            </div>
+            <div class="nav-section"><div class="section-label">Marketing</div>
+                <ul class="nav-items">
+                    <li class="nav-item"><a href="#" class="nav-link" data-section="coupons"><div class="nav-icon"><i class="fas fa-ticket-alt"></i></div>Coupons</a></li>
+                    <li class="nav-item"><a href="#" class="nav-link" data-section="reviews"><div class="nav-icon"><i class="fas fa-star"></i></div>Reviews</a></li>
+                </ul>
+            </div>
+            <div class="nav-section"><div class="section-label">Settings</div>
+                <ul class="nav-items">
+                    <li class="nav-item"><a href="#" class="nav-link" data-section="users"><div class="nav-icon"><i class="fas fa-users"></i></div>Users</a></li>
+                    <li class="nav-item"><a href="#" class="nav-link" data-section="settings"><div class="nav-icon"><i class="fas fa-cog"></i></div>Settings</a></li>
+                </ul>
+            </div>
+        </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="admin-main">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="dashboard-section active">
+            <div class="section-header"><h1 class="section-title">Dashboard Overview</h1><p class="section-subtitle">Welcome back! Here's what's happening with your store today.</p></div>
+            
+            <div class="quick-actions-scroll">
+                <div class="quick-action-btn" onclick="window.AdminProducts.openAddProductModal()">
+                    <div class="quick-action-icon"><i class="fas fa-plus"></i></div><span class="quick-action-text">Add Product</span>
+                </div>
+                <div class="quick-action-btn" onclick="window.AdminDashboard.showSection('inventory')">
+                    <div class="quick-action-icon" style="background: linear-gradient(135deg, var(--success-500), var(--success-600));"><i class="fas fa-warehouse"></i></div><span class="quick-action-text">Inventory</span>
+                </div>
+                <div class="quick-action-btn" onclick="window.AdminProducts.exportProducts()">
+                    <div class="quick-action-icon" style="background: linear-gradient(135deg, var(--info-500), var(--info-600));"><i class="fas fa-file-export"></i></div><span class="quick-action-text">Export</span>
+                </div>
+                <div class="quick-action-btn" onclick="window.AdminProducts.bulkEditProducts()">
+                    <div class="quick-action-icon" style="background: linear-gradient(135deg, var(--warning-500), var(--warning-600));"><i class="fas fa-edit"></i></div><span class="quick-action-text">Bulk Edit</span>
+                </div>
+                <div class="quick-action-btn" onclick="window.AdminProducts.duplicateSelected()">
+                    <div class="quick-action-icon" style="background: linear-gradient(135deg, #8B5CF6, #7C3AED);"><i class="fas fa-copy"></i></div><span class="quick-action-text">Duplicate</span>
+                </div>
+                <div class="quick-action-btn" onclick="window.AdminProducts.manageCategories()">
+                    <div class="quick-action-icon" style="background: linear-gradient(135deg, #F59E0B, #D97706);"><i class="fas fa-tags"></i></div><span class="quick-action-text">Categories</span>
+                </div>
+                <div class="quick-action-btn" onclick="window.AdminProducts.importProducts()">
+                    <div class="quick-action-icon" style="background: linear-gradient(135deg, #10B981, #059669);"><i class="fas fa-upload"></i></div><span class="quick-action-text">Import</span>
+                </div>
+                <div class="quick-action-btn" onclick="window.AdminSettings.backupDatabase()">
+                    <div class="quick-action-icon" style="background: linear-gradient(135deg, #EC4899, #DB2777);"><i class="fas fa-database"></i></div><span class="quick-action-text">Backup</span>
+                </div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-header"><div class="stat-icon primary"><i class="fas fa-shopping-cart"></i></div><div class="text-xs">Today</div></div><div class="stat-value" id="todayRevenue">₦0</div><div class="stat-label">Today's Revenue</div></div>
+                <div class="stat-card"><div class="stat-header"><div class="stat-icon success"><i class="fas fa-box"></i></div><div class="text-xs">Total</div></div><div class="stat-value" id="totalProductsCount">0</div><div class="stat-label">Products</div></div>
+                <div class="stat-card"><div class="stat-header"><div class="stat-icon warning"><i class="fas fa-exclamation-triangle"></i></div><div class="text-xs">Alert</div></div><div class="stat-value" id="lowStockCountStat">0</div><div class="stat-label">Low Stock</div></div>
+                <div class="stat-card"><div class="stat-header"><div class="stat-icon danger"><i class="fas fa-ban"></i></div><div class="text-xs">Out</div></div><div class="stat-value" id="outOfStockCount">0</div><div class="stat-label">Out of Stock</div></div>
+                <div class="stat-card"><div class="stat-header"><div class="stat-icon info"><i class="fas fa-users"></i></div><div class="text-xs">Active</div></div><div class="stat-value" id="activeUsers">0</div><div class="stat-label">Active Users</div></div>
+                <div class="stat-card"><div class="stat-header"><div class="stat-icon" style="background: linear-gradient(135deg, #8B5CF6, #7C3AED);"><i class="fas fa-truck"></i></div><div class="text-xs">Pending</div></div><div class="stat-value" id="pendingOrders">0</div><div class="stat-label">Pending Orders</div></div>
+            </div>
+            
+            <div class="mb-6"><div class="flex items-center justify-between mb-4"><h2 class="section-title-sm">Recent Products</h2><div class="flex gap-2"><button class="btn btn-sm btn-secondary" onclick="window.AdminProducts.loadProducts()"><i class="fas fa-sync-alt"></i> Refresh</button><button class="btn btn-sm btn-primary" onclick="window.AdminProducts.openAddProductModal()"><i class="fas fa-plus"></i> Add New</button></div></div><div class="products-grid" id="recentProducts"><div class="loading"><div class="loading-spinner"></div><p>Loading recent products...</p></div></div></div>
+        </section>
+        
+        <!-- Analytics Section -->
+        <section id="analytics" class="dashboard-section">
+            <div class="section-header"><h1 class="section-title">Analytics Dashboard</h1><p class="section-subtitle">Track your store performance</p></div>
+            <div class="floating-icon-container"><div class="floating-icon"><i class="fas fa-chart-line"></i></div><h2 class="floating-title">Analytics Center</h2><p class="floating-description">Monitor sales trends, customer behavior, and business performance.</p></div>
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-header"><div class="stat-icon primary"><i class="fas fa-chart-bar"></i></div><div class="text-xs">30 days</div></div><div class="stat-value" id="monthlyRevenue">₦0</div><div class="stat-label">Monthly Revenue</div></div>
+                <div class="stat-card"><div class="stat-header"><div class="stat-icon success"><i class="fas fa-shopping-cart"></i></div><div class="text-xs">Total</div></div><div class="stat-value" id="totalOrders">0</div><div class="stat-label">Total Orders</div></div>
+                <div class="stat-card"><div class="stat-header"><div class="stat-icon warning"><i class="fas fa-user-plus"></i></div><div class="text-xs">New</div></div><div class="stat-value" id="newCustomers">0</div><div class="stat-label">New Customers</div></div>
+                <div class="stat-card"><div class="stat-header"><div class="stat-icon info"><i class="fas fa-percentage"></i></div><div class="text-xs">Rate</div></div><div class="stat-value" id="conversionRate">0%</div><div class="stat-label">Conversion Rate</div></div>
+            </div>
+            <div class="quick-actions-scroll mb-6">
+                <div class="quick-action-btn" onclick="window.AdminDashboard.viewSalesReport()"><div class="quick-action-icon" style="background: linear-gradient(135deg, var(--success-500), var(--success-600));"><i class="fas fa-file-invoice-dollar"></i></div><span class="quick-action-text">Sales Report</span></div>
+                <div class="quick-action-btn" onclick="window.AdminDashboard.viewCustomerAnalytics()"><div class="quick-action-icon" style="background: linear-gradient(135deg, var(--info-500), var(--info-600));"><i class="fas fa-users"></i></div><span class="quick-action-text">Customers</span></div>
+                <div class="quick-action-btn" onclick="window.AdminDashboard.viewProductAnalytics()"><div class="quick-action-icon" style="background: linear-gradient(135deg, var(--warning-500), var(--warning-600));"><i class="fas fa-box"></i></div><span class="quick-action-text">Products</span></div>
+                <div class="quick-action-btn" onclick="window.AdminDashboard.exportAnalytics()"><div class="quick-action-icon" style="background: linear-gradient(135deg, #8B5CF6, #7C3AED);"><i class="fas fa-download"></i></div><span class="quick-action-text">Export Data</span></div>
+            </div>
+            <div class="action-card mb-6"><h3 class="section-title-sm mb-4">Sales Overview</h3><div class="empty-state" style="border: none; background: transparent;"><div class="empty-icon"><i class="fas fa-chart-area"></i></div><h3 class="empty-title">Analytics Charts</h3><p class="empty-description">Real-time sales charts will appear here.</p><button class="btn btn-primary mt-4" onclick="window.AdminDashboard.loadDemoAnalytics()"><i class="fas fa-eye"></i> View Demo Analytics</button></div></div>
+        </section>
+        
+        <!-- Products Section -->
+        <section id="products" class="dashboard-section">
+            <div class="section-header"><h1 class="section-title">Product Management</h1><p class="section-subtitle">Manage your entire product catalog</p></div>
+            <div class="quick-actions-scroll mb-6">
+                <div class="quick-action-btn" onclick="window.AdminProducts.openAddProductModal()"><div class="quick-action-icon"><i class="fas fa-plus"></i></div><span class="quick-action-text">Add New</span></div>
+                <div class="quick-action-btn" onclick="window.AdminProducts.bulkEditProducts()"><div class="quick-action-icon" style="background: linear-gradient(135deg, var(--warning-500), var(--warning-600));"><i class="fas fa-edit"></i></div><span class="quick-action-text">Bulk Edit</span></div>
+                <div class="quick-action-btn" onclick="window.AdminProducts.exportProducts()"><div class="quick-action-icon" style="background: linear-gradient(135deg, var(--info-500), var(--info-600));"><i class="fas fa-file-export"></i></div><span class="quick-action-text">Export CSV</span></div>
+                <div class="quick-action-btn" onclick="window.AdminProducts.importProducts()"><div class="quick-action-icon" style="background: linear-gradient(135deg, var(--success-500), var(--success-600));"><i class="fas fa-upload"></i></div><span class="quick-action-text">Import CSV</span></div>
+                <div class="quick-action-btn" onclick="window.AdminProducts.filterProducts('low_stock')"><div class="quick-action-icon" style="background: linear-gradient(135deg, var(--danger-500), var(--danger-600));"><i class="fas fa-exclamation-triangle"></i></div><span class="quick-action-text">Low Stock</span></div>
+                <div class="quick-action-btn" onclick="window.AdminProducts.duplicateSelected()"><div class="quick-action-icon" style="background: linear-gradient(135deg, #8B5CF6, #7C3AED);"><i class="fas fa-copy"></i></div><span class="quick-action-text">Duplicate</span></div>
+                <div class="quick-action-btn" onclick="window.AdminProducts.deleteSelected()"><div class="quick-action-icon" style="background: linear-gradient(135deg, #EF4444, #DC2626);"><i class="fas fa-trash"></i></div><span class="quick-action-text">Delete</span></div>
+            </div>
+            <div class="mb-6"><div class="flex flex-col sm:flex-row gap-4 mb-4"><div class="flex gap-2 flex-1"><select class="form-control" id="categoryFilter"><option value="">All Categories</option></select><input type="text" class="form-control" placeholder="Search products..." id="productSearch"></div><div class="flex gap-2"><button class="btn btn-primary" onclick="window.AdminProducts.openAddProductModal()"><i class="fas fa-plus"></i> Add Product</button><button class="btn btn-secondary" onclick="window.AdminProducts.loadProducts()"><i class="fas fa-sync-alt"></i></button></div></div></div>
+            <div class="products-grid" id="allProducts"><div class="loading"><div class="loading-spinner"></div><p>Loading products...</p></div></div>
+            <div class="flex items-center justify-between mt-6" id="paginationContainer" style="display: none;"><div class="text-sm text-gray-600">Showing <span id="startRow">1</span>-<span id="endRow">20</span> of <span id="totalRows">0</span></div><div class="flex gap-2"><button class="btn btn-sm btn-secondary" id="prevBtn"><i class="fas fa-chevron-left"></i> Previous</button><button class="btn btn-sm btn-secondary" id="nextBtn">Next <i class="fas fa-chevron-right"></i></button></div></div>
+        </section>
+        
+        <!-- Categories Section -->
+        <section id="categories" class="dashboard-section">
+            <div class="section-header"><h1 class="section-title">Category Management</h1><p class="section-subtitle">Organize your products</p></div>
+            <div class="floating-icon-container"><div class="floating-icon"><i class="fas fa-tags"></i></div><h2 class="floating-title">Category Center</h2><p class="floating-description">Create and manage product categories.</p></div>
+            <div class="products-grid" id="categoriesGrid"><div class="empty-state"><div class="empty-icon"><i class="fas fa-tags"></i></div><h3 class="empty-title">Manage Categories</h3><p class="empty-description">Create product categories to organize your inventory.</p><div class="flex flex-col sm:flex-row gap-2 mt-4"><button class="btn btn-secondary" onclick="window.AdminDashboard.viewAllCategories()"><i class="fas fa-list"></i> View All</button><button class="btn btn-primary" onclick="window.AdminDashboard.createNewCategory()"><i class="fas fa-plus"></i> Create Category</button></div></div></div>
+        </section>
+        
+        <!-- Inventory Section -->
+        <section id="inventory" class="dashboard-section">
+            <div class="section-header"><h1 class="section-title">Inventory Management</h1><p class="section-subtitle">Track stock levels</p></div>
+            <div class="quick-actions-scroll mb-6">
+                <div class="quick-action-btn" onclick="window.AdminDashboard.bulkStockUpdate()"><div class="quick-action-icon"><i class="fas fa-edit"></i></div><span class="quick-action-text">Bulk Update</span></div>
+                <div class="quick-action-btn" onclick="window.AdminDashboard.downloadStockTemplate()"><div class="quick-action-icon" style="background: linear-gradient(135deg, var(--info-500), var(--info-600));"><i class="fas fa-download"></i></div><span class="quick-action-text">Template</span></div>
+                <div class="quick-action-btn" onclick="window.AdminDashboard.importStockCSV()"><div class="quick-action-icon" style="background: linear-gradient(135deg, var(--success-500), var(--success-600));"><i class="fas fa-upload"></i></div><span class="quick-action-text">Import CSV</span></div>
+                <div class="quick-action-btn" onclick="window.AdminDashboard.showLowStock()"><div class="quick-action-icon" style="background: linear-gradient(135deg, var(--warning-500), var(--warning-600));"><i class="fas fa-exclamation-triangle"></i></div><span class="quick-action-text">Low Stock</span></div>
+                <div class="quick-action-btn" onclick="window.AdminDashboard.showOutOfStock()"><div class="quick-action-icon" style="background: linear-gradient(135deg, var(--danger-500), var(--danger-600));"><i class="fas fa-ban"></i></div><span class="quick-action-text">Out of Stock</span></div>
+                <div class="quick-action-btn" onclick="window.AdminDashboard.generateStockReport()"><div class="quick-action-icon" style="background: linear-gradient(135deg, #8B5CF6, #7C3AED);"><i class="fas fa-chart-bar"></i></div><span class="quick-action-text">Report</span></div>
+            </div>
+            <div class="stats-grid mb-6"><div class="stat-card"><div class="stat-value" id="inventoryTotalStock">0</div><div class="stat-label">Total Stock</div></div><div class="stat-card"><div class="stat-value" id="inventoryLowStock">0</div><div class="stat-label">Low Stock</div></div><div class="stat-card"><div class="stat-value" id="inventoryOutOfStock">0</div><div class="stat-label">Out of Stock</div></div><div class="stat-card"><div class="stat-value" id="inventoryValue">₦0</div><div class="stat-label">Inventory Value</div></div></div>
+            <div class="mb-6"><h2 class="section-title-sm mb-4">Low Stock Alerts</h2><div id="lowStockAlerts"><div class="empty-state"><div class="empty-icon"><i class="fas fa-check-circle"></i></div><h3 class="empty-title">All Stock Levels Good</h3><p class="empty-description">No products are currently low on stock.</p></div></div></div>
+        </section>
+        
+        <!-- Orders Section -->
+        <section id="orders" class="dashboard-section">
+            <div class="section-header"><h1 class="section-title">Order Management</h1><p class="section-subtitle">Manage customer orders</p></div>
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-value" id="totalOrdersCount">0</div><div class="stat-label">Total Orders</div></div>
+                <div class="stat-card"><div class="stat-value" id="pendingOrdersCount">0</div><div class="stat-label">Pending</div></div>
+                <div class="stat-card"><div class="stat-value" id="processingOrdersCount">0</div><div class="stat-label">Processing</div></div>
+                <div class="stat-card"><div class="stat-value" id="deliveredOrdersCount">0</div><div class="stat-label">Delivered</div></div>
+                <div class="stat-card"><div class="stat-value" id="cancelledOrdersCount">0</div><div class="stat-label">Cancelled</div></div>
+                <div class="stat-card"><div class="stat-value" id="totalRevenueStatOrders">₦0</div><div class="stat-label">Revenue</div></div>
+            </div>
+            <div class="action-card">
+                <div class="flex flex-col sm:flex-row gap-4 items-center justify-between mb-4">
+                    <div class="flex gap-2 flex-wrap">
+                        <button class="order-filter-btn active" data-status="all">All Orders</button>
+                        <button class="order-filter-btn" data-status="pending">Pending</button>
+                        <button class="order-filter-btn" data-status="processing">Processing</button>
+                        <button class="order-filter-btn" data-status="shipped">Shipped</button>
+                        <button class="order-filter-btn" data-status="delivered">Delivered</button>
+                        <button class="order-filter-btn" data-status="cancelled">Cancelled</button>
+                    </div>
+                    <div class="flex gap-2"><input type="text" id="orderSearchInput" class="form-control" placeholder="Search order # or customer..." style="width: 220px;"><button class="btn btn-secondary" onclick="window.AdminOrders.exportOrders()"><i class="fas fa-download"></i> Export</button><button class="btn btn-secondary" onclick="window.AdminOrders.refreshOrders()"><i class="fas fa-sync-alt"></i></button></div>
+                </div>
+                <div class="orders-table-container"><div class="orders-table-header"><div></div><div>Order</div><div>Date</div><div>Customer</div><div>Total</div><div>Status</div><div>Payment</div><div>Actions</div></div><div id="ordersList"><div class="loading"><div class="loading-spinner"></div><p>Loading orders...</p></div></div></div>
+                <div class="flex items-center justify-between mt-6" id="ordersPagination" style="display: none;"><div class="text-sm text-gray-600">Showing <span id="ordersStartRow">0</span>-<span id="ordersEndRow">0</span> of <span id="ordersTotalRows">0</span></div><div class="flex gap-2"><button class="btn btn-sm btn-secondary" id="ordersPrevBtn"><i class="fas fa-chevron-left"></i> Previous</button><button class="btn btn-sm btn-secondary" id="ordersNextBtn">Next <i class="fas fa-chevron-right"></i></button></div></div>
+            </div>
+        </section>
+        
+        <!-- Users Section -->
+        <section id="users" class="dashboard-section">
+            <div class="section-header"><h1 class="section-title">User Management</h1><p class="section-subtitle">Manage admin users</p></div>
+            <div class="floating-icon-container"><div class="floating-icon"><i class="fas fa-users"></i></div><h2 class="floating-title">User Center</h2><p class="floating-description">Manage admin users and permissions.</p></div>
+            <div class="products-grid" id="usersGrid"><div class="empty-state"><div class="empty-icon"><i class="fas fa-users-cog"></i></div><h3 class="empty-title">User Management</h3><p class="empty-description">Add new admin users and set permissions.</p><div class="flex flex-col sm:flex-row gap-2 mt-4"><button class="btn btn-secondary" onclick="window.AdminDashboard.viewAllUsers()"><i class="fas fa-list"></i> View All</button><button class="btn btn-primary" onclick="window.AdminDashboard.inviteNewUser()"><i class="fas fa-user-plus"></i> Invite User</button></div></div></div>
+        </section>
+        
+        <!-- Coupons Section -->
+        <section id="coupons" class="dashboard-section">
+            <div class="section-header"><h1 class="section-title">Coupon Management</h1><p class="section-subtitle">Create discount coupons</p></div>
+            <div class="floating-icon-container"><div class="floating-icon"><i class="fas fa-ticket-alt"></i></div><h2 class="floating-title">Coupon Center</h2><p class="floating-description">Create discount coupons and promo codes.</p></div>
+            <div class="products-grid" id="couponsGrid"><div class="empty-state"><div class="empty-icon"><i class="fas fa-percentage"></i></div><h3 class="empty-title">Discount Coupons</h3><p class="empty-description">Create discount coupons to attract customers.</p><div class="flex flex-col sm:flex-row gap-2 mt-4"><button class="btn btn-secondary" onclick="window.AdminDashboard.viewAllCoupons()"><i class="fas fa-list"></i> View All</button><button class="btn btn-primary" onclick="window.AdminDashboard.createNewCoupon()"><i class="fas fa-plus"></i> Create Coupon</button></div></div></div>
+        </section>
+        
+        <!-- Reviews Section -->
+        <section id="reviews" class="dashboard-section">
+            <div class="section-header"><h1 class="section-title">Product Reviews</h1><p class="section-subtitle">Manage customer reviews</p></div>
+            <div class="floating-icon-container"><div class="floating-icon"><i class="fas fa-star"></i></div><h2 class="floating-title">Reviews Center</h2><p class="floating-description">Monitor and manage customer reviews.</p></div>
+            <div class="products-grid" id="reviewsGrid"><div class="empty-state"><div class="empty-icon"><i class="fas fa-comments"></i></div><h3 class="empty-title">Customer Reviews</h3><p class="empty-description">View and manage customer reviews.</p><div class="flex flex-col sm:flex-row gap-2 mt-4"><button class="btn btn-secondary" onclick="window.AdminDashboard.viewAllReviews()"><i class="fas fa-list"></i> View All</button><button class="btn btn-primary" onclick="window.AdminDashboard.moderateReviews()"><i class="fas fa-check-double"></i> Moderate</button></div></div></div>
+        </section>
+        
+        <!-- Settings Section -->
+        <section id="settings" class="dashboard-section">
+            <div class="section-header"><h1 class="section-title">Store Settings</h1><p class="section-subtitle">Configure your preferences</p></div>
+            <div class="settings-panel">
+                <div class="settings-section"><h3 class="settings-section-title">Appearance</h3>
+                    <div class="setting-item"><div><div class="setting-label">Dark Mode</div><div class="setting-description">Toggle between light and dark theme</div></div><label class="toggle-switch"><input type="checkbox" id="darkModeToggle" onchange="window.AdminSettings.toggleDarkMode()"><span class="toggle-slider"></span></label></div>
+                    <div class="setting-item"><div><div class="setting-label">Font Size</div><div class="setting-description">Adjust the base font size</div></div><input type="range" min="12" max="18" value="14" class="range-slider" id="fontSizeSlider" onchange="window.AdminSettings.changeFontSize(this.value)"></div>
+                    <div class="setting-item"><div><div class="setting-label">Primary Color</div><div class="setting-description">Choose your primary theme color</div></div><input type="color" id="primaryColorPicker" value="#6366F1" onchange="window.AdminSettings.changePrimaryColor(this.value)"></div>
+                    <div class="setting-item"><div><div class="setting-label">Button Style</div><div class="setting-description">Choose button design style</div></div><select class="form-control text-sm" style="width: 140px;" id="buttonStyle" onchange="window.AdminSettings.changeButtonStyle(this.value)"><option value="rounded">Rounded</option><option value="square">Square</option><option value="pill">Pill</option></select></div>
+                </div>
+                <div class="settings-section"><h3 class="settings-section-title">Database</h3>
+                    <div class="setting-item"><div><div class="setting-label">Supabase Connection</div><div class="setting-description" id="dbConnectionStatus">Connected</div></div><button class="btn btn-sm btn-secondary" onclick="window.AdminSettings.testConnection()">Test</button></div>
+                    <div class="setting-item"><div><div class="setting-label">Cache Management</div><div class="setting-description">Clear cached data for fresh loading</div></div><button class="btn btn-sm btn-secondary" onclick="window.AdminSettings.clearCache()">Clear Cache</button></div>
+                    <div class="setting-item"><div><div class="setting-label">Backup Database</div><div class="setting-description">Create a backup of your database</div></div><button class="btn btn-sm btn-primary" onclick="window.AdminSettings.backupDatabase()">Backup Now</button></div>
+                    <div class="setting-item"><div><div class="setting-label">Sync Interval</div><div class="setting-description">How often to sync with database</div></div><select class="form-control text-sm" style="width: 140px;" id="syncInterval" onchange="window.AdminSettings.setSyncInterval(this.value)"><option value="realtime">Real-time</option><option value="30s">30 seconds</option><option value="1m" selected>1 minute</option><option value="5m">5 minutes</option><option value="manual">Manual Only</option></select></div>
+                </div>
+                <div class="settings-section"><h3 class="settings-section-title">Image Configuration</h3>
+                    <div class="form-group"><label class="form-label">Base Image URL</label><input type="text" class="form-control" value="https://ebuzome.github.io/JMPOTTERS/assets/images/" readonly></div>
+                    <div class="form-group"><label class="form-label">Category Paths</label><div class="text-sm text-gray-600 bg-gray-50 p-3 rounded border"><pre id="categoryPaths" style="white-space: pre-wrap; font-family: monospace;"></pre></div></div>
+                    <div class="setting-item"><div><div class="setting-label">Image Optimization</div><div class="setting-description">Auto-compress uploaded images</div></div><label class="toggle-switch"><input type="checkbox" id="imageOptimization" checked><span class="toggle-slider"></span></label></div>
+                </div>
+                <div class="settings-section"><h3 class="settings-section-title">Advanced</h3>
+                    <div class="setting-item"><div><div class="setting-label">Auto-refresh Interval</div><div class="setting-description">Set how often data refreshes automatically</div></div><select class="form-control text-sm" style="width: 140px;" id="refreshInterval" onchange="window.AdminSettings.setRefreshInterval(this.value)"><option value="0">Off</option><option value="30000">30 seconds</option><option value="60000" selected>1 minute</option><option value="300000">5 minutes</option><option value="900000">15 minutes</option></select></div>
+                    <div class="setting-item"><div><div class="setting-label">Notifications</div><div class="setting-description">Enable desktop notifications</div></div><label class="toggle-switch"><input type="checkbox" id="notificationsToggle" onchange="window.AdminSettings.toggleNotifications()"><span class="toggle-slider"></span></label></div>
+                    <div class="setting-item"><div><div class="setting-label">Export Format</div><div class="setting-description">Choose default export format</div></div><select class="form-control text-sm" style="width: 120px;" id="exportFormat"><option value="csv">CSV</option><option value="json">JSON</option><option value="excel">Excel</option></select></div>
+                    <div class="setting-item"><div><div class="setting-label">Keyboard Shortcuts</div><div class="setting-description">Enable keyboard navigation</div></div><label class="toggle-switch"><input type="checkbox" id="keyboardShortcuts" checked><span class="toggle-slider"></span></label></div>
+                    <div class="setting-item"><div><div class="setting-label">Developer Mode</div><div class="setting-description">Show console logs and debug info</div></div><label class="toggle-switch"><input type="checkbox" id="developerMode" onchange="window.AdminSettings.toggleDeveloperMode()"><span class="toggle-slider"></span></label></div>
+                </div>
+                <div class="settings-section"><h3 class="settings-section-title" style="color: var(--danger-600);">Danger Zone</h3>
+                    <div class="setting-item"><div><div class="setting-label">Reset All Settings</div><div class="setting-description">Restore all settings to default values</div></div><button class="btn btn-sm btn-secondary" onclick="window.AdminSettings.resetSettings()">Reset</button></div>
+                    <div class="setting-item"><div><div class="setting-label">Delete All Data</div><div class="setting-description">Permanently delete all products and data</div></div><button class="btn btn-sm btn-danger" onclick="window.AdminDashboard.confirmDeleteAll()">Delete All</button></div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Product Modal -->
+    <div class="modal-overlay" id="productModal">
+        <div class="modal-content">
+            <div class="modal-header"><h2 class="modal-title" id="modalTitle">Add New Product</h2><button class="modal-close" onclick="window.AdminProducts.closeModal()"><i class="fas fa-times"></i></button></div>
+            <div class="modal-body">
+                <form id="productForm" onsubmit="return window.AdminProducts.saveProduct(event)">
+                    <input type="hidden" id="productId"><input type="hidden" id="isFootwear">
+                    <div class="mb-6"><h3 class="section-title-sm mb-4">Basic Information</h3>
+                        <div class="form-row"><div class="form-group"><label class="form-label required">Product Name</label><input type="text" id="productName" class="form-control" required placeholder="Enter product name"></div><div class="form-group"><label class="form-label required">Price (₦)</label><input type="number" id="productPrice" class="form-control" required min="0" step="100" placeholder="0"></div></div>
+                        <div class="form-row"><div class="form-group"><label class="form-label required">Category</label><select id="productCategory" class="form-control" required onchange="window.AdminProducts.onCategoryChange()"><option value="">Select Category</option></select></div><div class="form-group"><label class="form-label">Stock Quantity</label><input type="number" id="productStock" class="form-control" min="0" value="0" placeholder="0"><div class="form-help">For non-footwear products only</div></div></div>
+                        <div class="form-group"><label class="form-label required">Product Image</label><input type="text" id="productImageName" class="form-control" placeholder="image-filename.jpg" oninput="window.AdminProducts.updateImagePreview()"><div class="form-help">Enter only the filename (e.g., "Sleek-Heels-18500.jpg")</div><div class="mt-3" id="imagePreviewContainer" style="display: none;"><div class="text-sm font-medium mb-1">Image Preview</div><div class="border rounded-lg p-3 bg-gray-50"><div class="flex items-center gap-3"><div class="w-24 h-24 bg-gray-200 rounded overflow-hidden flex items-center justify-center"><img id="imagePreview" src="" alt="Preview" class="w-full h-full object-cover" onerror="this.style.display='none'; document.getElementById('imagePreviewPlaceholder').style.display='block';"><div id="imagePreviewPlaceholder" class="text-gray-400"><i class="fas fa-image"></i></div></div><div class="flex-1"><div class="text-sm text-gray-600" id="imagePathInfo"></div><div class="text-xs text-gray-500 mt-1" id="imageStatus"></div></div></div></div></div></div>
+                        <div class="form-group"><label class="form-label">Description</label><textarea id="productDescription" class="form-control" rows="3" placeholder="Enter product description..."></textarea></div>
+                    </div>
+                    <div class="color-management" id="colorManagementSection" style="display: none;"><h3 class="section-title-sm mb-4"><i class="fas fa-palette"></i> Color Variants <span class="text-sm font-normal text-gray-600 ml-2" id="colorCount">(0 colors)</span></h3><div class="mb-4"><p class="text-sm text-gray-600 mb-3">Manage color variants for this product.</p><button type="button" class="btn btn-primary" onclick="window.AdminColors.openAddColorModal()"><i class="fas fa-plus"></i> Add New Color</button></div><div class="colors-grid" id="colorsContainer"></div></div>
+                    <div class="sizes-management" id="sizeManagementSection" style="display: none;"><h3 class="section-title-sm mb-4"><i class="fas fa-ruler"></i> Size & Stock Management <span class="text-sm font-normal text-gray-600 ml-2" id="sizeCount">(Select a color)</span></h3><div class="mb-4"><div class="flex items-center gap-3 mb-3"><label class="form-label mb-0">Select Color:</label><select id="colorSelector" class="form-control" style="width: auto;" onchange="window.AdminSizes.loadSizesForColor()"><option value="">Select a color</option></select><button type="button" class="btn btn-secondary" onclick="window.AdminSizes.openAddSizeModal()"><i class="fas fa-plus"></i> Add Size</button></div><p class="text-sm text-gray-600">Select a color above to manage sizes and stock levels.</p></div><div class="sizes-grid" id="sizesContainer"><div class="text-center py-8 text-gray-500"><i class="fas fa-shoe-prints mb-2" style="font-size: 2rem;"></i><p>Select a color to manage sizes</p></div></div></div>
+                    <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t"><button type="button" class="btn btn-secondary" onclick="window.AdminProducts.closeModal()">Cancel</button><div class="flex-1"></div><button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Product</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Color Modal -->
+    <div class="modal-overlay" id="addColorModal" style="display: none;"><div class="modal-content" style="max-width: 500px;"><div class="modal-header"><h2 class="modal-title">Add Color Variant</h2><button class="modal-close" onclick="window.AdminColors.closeAddColorModal()"><i class="fas fa-times"></i></button></div><div class="modal-body"><div class="form-group"><label class="form-label required">Color Name</label><div class="color-autocomplete"><input type="text" id="newColorName" class="form-control" placeholder="Start typing (e.g., Black, Red, Blue)" oninput="window.AdminColors.searchColors(this.value)"><div class="color-options" id="colorOptions"></div></div></div><div class="form-group"><label class="form-label">Color Combination</label><div class="flex flex-wrap gap-2 mb-3" id="selectedColors"></div><div class="color-picker-grid" id="colorPickerGrid"></div></div><div class="form-group"><label class="form-label">Generated Color Code</label><input type="text" id="newColorCode" class="form-control" readonly placeholder="Will be generated automatically"></div><div class="form-group"><label class="form-label"><input type="checkbox" id="isDefaultColor" checked> Set as Default Color</label></div><div class="flex gap-3 pt-4"><button type="button" class="btn btn-secondary flex-1" onclick="window.AdminColors.closeAddColorModal()">Cancel</button><button type="button" class="btn btn-primary flex-1" onclick="window.AdminColors.saveNewColor()"><i class="fas fa-save"></i> Save Color</button></div></div></div></div>
+    
+    <!-- Add Size Modal -->
+    <div class="modal-overlay" id="addSizeModal" style="display: none;"><div class="modal-content" style="max-width: 400px;"><div class="modal-header"><h2 class="modal-title">Add Size Variant</h2><button class="modal-close" onclick="window.AdminSizes.closeAddSizeModal()"><i class="fas fa-times"></i></button></div><div class="modal-body"><div class="form-group"><label class="form-label required">Select Color</label><select id="sizeColorSelector" class="form-control"><option value="">Select a color</option></select></div><div class="form-group"><label class="form-label required">Size Value</label><input type="text" id="newSizeValue" class="form-control" placeholder="e.g., 38, 39, 40"></div><div class="form-group"><label class="form-label">Initial Stock Quantity</label><input type="number" id="newSizeStock" class="form-control" value="0" min="0"></div><div class="flex gap-3 pt-4"><button type="button" class="btn btn-secondary flex-1" onclick="window.AdminSizes.closeAddSizeModal()">Cancel</button><button type="button" class="btn btn-primary flex-1" onclick="window.AdminSizes.saveNewSize()"><i class="fas fa-save"></i> Save Size</button></div></div></div></div>
+    
+    <!-- Scripts -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="js/admin-core.js"></script>
+    <script src="js/admin-products.js"></script>
+    <script src="js/admin-orders.js"></script>
+    <script src="js/admin-colors.js"></script>
+    <script src="js/admin-sizes.js"></script>
+    <script src="js/admin-settings.js"></script>
+    
+    <script>
+        // ==================== MAIN INITIALIZATION ====================
+        window.loadInitialData = async function() {
+            try {
+                const { data: cats } = await supabase.from('categories').select('*').order('name');
+                categories = cats || [];
+                
+                const { data: prods } = await supabase.from('products').select('*').order('created_at', { ascending: false });
+                allProducts = prods || [];
+                filteredProducts = [...allProducts];
+                
+                await AdminProducts.loadProductColorsBatch();
+                await AdminProducts.loadProductSizesBatch();
+                AdminProducts.calculateProductTotalStock();
+                AdminProducts.updateProductCounts();
+                AdminProducts.renderRecentProducts();
+                AdminProducts.renderProductsPage();
+                AdminProducts.populateCategoryFilters();
+                await AdminOrders.loadOrders();
+                
+                showToast(`Loaded ${allProducts.length} products successfully`, 'success');
+            } catch (error) {
+                console.error('Failed to load data:', error);
+                showToast('Failed to load data: ' + error.message, 'error');
+            }
+        };
+        
+        window.updateDashboardStats = function() {
+            const totalRevenue = allOrders.reduce((sum, o) => sum + (o.grand_total || o.total_amount || 0), 0);
+            document.getElementById('todayRevenue').textContent = '₦' + totalRevenue.toLocaleString();
+        };
+        
+        window.showSection = function(sectionId) {
+            const link = document.querySelector(`.nav-link[data-section="${sectionId}"]`);
+            if (link) link.click();
+        };
+        
+        // Quick action placeholders
+        window.exportProducts = function() { showToast('Export feature coming soon', 'info'); };
+        window.bulkEditProducts = function() { showToast('Bulk edit feature coming soon', 'info'); };
+        window.duplicateSelected = function() { showToast('Duplicate feature coming soon', 'info'); };
+        window.deleteSelected = function() { showToast('Delete feature coming soon', 'info'); };
+        window.manageCategories = function() { showToast('Category management coming soon', 'info'); };
+        window.importProducts = function() { showToast('Import feature coming soon', 'info'); };
+        window.bulkStockUpdate = function() { showToast('Bulk stock update coming soon', 'info'); };
+        window.downloadStockTemplate = function() { showToast('Stock template download coming soon', 'info'); };
+        window.importStockCSV = function() { showToast('Stock CSV import coming soon', 'info'); };
+        window.showLowStock = function() { AdminProducts.filterProducts('low_stock'); showSection('products'); };
+        window.showOutOfStock = function() { showToast('Out of stock filter coming soon', 'info'); };
+        window.generateStockReport = function() { showToast('Stock report generation coming soon', 'info'); };
+        window.confirmDeleteAll = function() { if (confirm('⚠️ DANGER: This will delete ALL data permanently! Are you absolutely sure?')) showToast('Delete all feature coming soon', 'warning'); };
+        window.viewSalesReport = function() { showToast('Sales report feature coming soon', 'info'); };
+        window.viewCustomerAnalytics = function() { showToast('Customer analytics feature coming soon', 'info'); };
+        window.viewProductAnalytics = function() { showToast('Product analytics feature coming soon', 'info'); };
+        window.exportAnalytics = function() { showToast('Analytics export feature coming soon', 'info'); };
+        window.loadDemoAnalytics = function() { showToast('Loading demo analytics...', 'info'); };
+        window.viewAllCategories = function() { showToast('View all categories feature coming soon', 'info'); };
+        window.createNewCategory = function() { showToast('Create category feature coming soon', 'info'); };
+        window.viewAllUsers = function() { showToast('View all users feature coming soon', 'info'); };
+        window.inviteNewUser = function() { showToast('Invite user feature coming soon', 'info'); };
+        window.viewAllCoupons = function() { showToast('View all coupons feature coming soon', 'info'); };
+        window.createNewCoupon = function() { showToast('Create coupon feature coming soon', 'info'); };
+        window.viewAllReviews = function() { showToast('View all reviews feature coming soon', 'info'); };
+        window.moderateReviews = function() { showToast('Moderate reviews feature coming soon', 'info'); };
+        
+        // Initialize application
+        async function initApp() {
+            await AdminCore.initSupabase();
+            supabase = AdminCore.getSupabase();
+            AdminCore.initializeColorDatabase();
+            AdminCore.loadUserPreferences();
+            AdminCore.setupEventListeners();
+            await window.loadInitialData();
+            window.updateDashboardStats();
+            AdminCore.setupAutoRefresh();
+            AdminColors.populateColorPickerGrid();
+            AdminSettings.updateCategoryPaths();
+        }
+        
+        document.addEventListener('DOMContentLoaded', initApp);
+        
+        // Global exports
+        window.AdminDashboard = {
+            showSection: window.showSection,
+            exportProducts: window.exportProducts,
+            bulkEditProducts: window.bulkEditProducts,
+            duplicateSelected: window.duplicateSelected,
+            deleteSelected: window.deleteSelected,
+            manageCategories: window.manageCategories,
+            importProducts: window.importProducts,
+            bulkStockUpdate: window.bulkStockUpdate,
+            downloadStockTemplate: window.downloadStockTemplate,
+            importStockCSV: window.importStockCSV,
+            showLowStock: window.showLowStock,
+            showOutOfStock: window.showOutOfStock,
+            generateStockReport: window.generateStockReport,
+            confirmDeleteAll: window.confirmDeleteAll,
+            viewSalesReport: window.viewSalesReport,
+            viewCustomerAnalytics: window.viewCustomerAnalytics,
+            viewProductAnalytics: window.viewProductAnalytics,
+            exportAnalytics: window.exportAnalytics,
+            loadDemoAnalytics: window.loadDemoAnalytics,
+            viewAllCategories: window.viewAllCategories,
+            createNewCategory: window.createNewCategory,
+            viewAllUsers: window.viewAllUsers,
+            inviteNewUser: window.inviteNewUser,
+            viewAllCoupons: window.viewAllCoupons,
+            createNewCoupon: window.createNewCoupon,
+            viewAllReviews: window.viewAllReviews,
+            moderateReviews: window.moderateReviews
+        };
+    </script>
+</body>
+</html>
